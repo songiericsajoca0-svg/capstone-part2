@@ -1,0 +1,88 @@
+* {
+    margin:0; padding:0; box-sizing:border-box;
+}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f5f5;
+    color: #333;
+}
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+}
+header {
+    background: #1e3a8a;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+nav {
+    background: #172554;
+    padding: 0.8rem;
+}
+nav a {
+    color: white;
+    margin: 0 1.2rem;
+    text-decoration: none;
+    font-weight: 500;
+}
+nav a:hover { color: #93c5fd; }
+
+.card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 1.8rem;
+    margin: 1.5rem 0;
+}
+.btn {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+}
+.btn-primary   { background: #1d4ed8; color:white; }
+.btn-success   { background: #15803d; color:white; }
+.btn-danger    { background: #b91c1c; color:white; }
+.btn-secondary { background: #6b7280; color:white; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+th { background: #e5e7eb; }
+
+.qr-container {
+    text-align: center;
+    margin: 2rem 0;
+}
+.qr-container img {
+    max-width: 220px;
+    border: 8px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-danger:hover { background: #991b1b; }
+.btn-primary:hover { background: #1e40af; }
+.card { transition: transform 0.2s; }
+.card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+
+/* Mobile improvements */
+@media (max-width: 768px) {
+    nav a { margin: 0 0.8rem; font-size: 0.95rem; }
+    .container { padding: 15px; }
+    table { font-size: 0.9rem; }
+}
+
+
+/* wow */
+
+
