@@ -1,0 +1,49 @@
+{
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.9.0"
+    }
+  },
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/admin/(.*)",
+      "dest": "/admin/$1"
+    },
+    {
+      "src": "/passenger/(.*)",
+      "dest": "/passenger/$1"
+    },
+    {
+      "src": "/driver/(.*)",
+      "dest": "/driver/$1"
+    },
+    {
+      "src": "/includes/(.*)",
+      "dest": "/includes/$1"
+    },
+    {
+      "src": "/qr-code/(.*)",
+      "dest": "/qr-code/$1"
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "/uploads/$1"
+    },
+    {
+      "src": "/(.*)\\.(css|js|png|jpg|jpeg|gif|svg|ico|webp)$",
+      "dest": "/$1.$2"
+    },
+    {
+      "src": "/(.*)\\.php$",
+      "dest": "/$1.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ]
+}

@@ -48,6 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $success = "Profile updated successfully!";
         // Refresh data
         $user['profile'] = $profile_image;
+        $user['name'] = $name;
+        $user['contact'] = $contact;
     } else {
         $error = "Update failed. Please try again.";
     }
@@ -56,97 +58,410 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php include '../includes/header.php'; ?>
 
-<!-- Tailwind CDN (for modern styling - pwede mo palitan ng local Tailwind build kung production) -->
-<script src="https://cdn.tailwindcss.com"></script>
-
 <style>
-    /* Custom overrides para mas corporate feel */
+    @font-face {
+        font-family: 'NaruMonoDemo';
+        src: url('../assets/fonts/NaruMonoDemo-Regular.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    * {
+        font-family: 'NaruMonoDemo', monospace !important;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+
+    .profile-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Profile Card */
+    .profile-card {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1%, transparent 1%);
+        background-size: 50px 50px;
+        animation: shimmer 60s linear infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+
+    .profile-header h1 {
+        font-size: 2rem;
+        margin: 0;
+        font-weight: bold;
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-header p {
+        margin: 0.5rem 0 0;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Messages */
+    .alert {
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        border-left: 4px solid #10b981;
+        color: #065f46;
+    }
+
+    .alert-error {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border-left: 4px solid #ef4444;
+        color: #991b1b;
+    }
+
+    /* Profile Photo Section */
+    .photo-section {
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .profile-preview-wrapper {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
     .profile-preview {
-        width: 140px;
-        height: 140px;
+        width: 150px;
+        height: 150px;
         object-fit: cover;
-        border-radius: 9999px;
-        border: 4px solid #e5e7eb;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
     }
 
-    input:focus {
+    .profile-preview:hover {
+        transform: scale(1.05);
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+    }
+
+    .photo-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .btn-photo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 0.9rem;
+    }
+
+    .btn-upload {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+    }
+
+    .btn-camera {
+        background: #f3f4f6;
+        color: #374151;
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-camera:hover {
+        background: #e5e7eb;
+        transform: translateY(-2px);
+    }
+
+    /* Camera Container */
+    .camera-container {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .camera-container video {
+        max-width: 100%;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .camera-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .btn-capture {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-cancel {
+        background: #6b7280;
+        color: white;
+    }
+
+    /* Form Section */
+    .form-section {
+        padding: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #374151;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-control:focus {
         outline: none;
-        ring: 2px solid #3b82f6;
-        border-color: #3b82f6;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
     }
 
-    .btn-primary {
-        transition: all 0.2s ease;
+    .form-control:disabled {
+        background: #f9fafb;
+        cursor: not-allowed;
+        color: #6b7280;
     }
 
-    .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    .input-icon {
+        position: relative;
+    }
+
+    .input-icon .icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    .input-icon .form-control {
+        padding-left: 2.5rem;
+    }
+
+    .btn-submit {
+        width: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102,126,234,0.4);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+
+    hr {
+        margin: 1.5rem 0;
+        border: none;
+        border-top: 2px solid #e5e7eb;
+    }
+
+    @media (max-width: 768px) {
+        .profile-container {
+            margin: 1rem auto;
+        }
+        
+        .photo-actions {
+            flex-direction: column;
+        }
+        
+        .btn-photo {
+            justify-content: center;
+        }
+        
+        .profile-header h1 {
+            font-size: 1.5rem;
+        }
     }
 </style>
 
-<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-3xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-200">
-        
+<div class="profile-container">
+    <div class="profile-card">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-10 text-white">
-            <h1 class="text-3xl font-bold tracking-tight">My Profile</h1>
-            <p class="mt-2 text-blue-100">Manage your personal information and profile picture</p>
+        <div class="profile-header">
+            <h1>👤 My Profile</h1>
+            <p>Manage your personal information and profile picture</p>
         </div>
 
         <!-- Messages -->
-        <div class="px-8 pt-6">
+        <div style="padding: 0 2rem; padding-top: 1.5rem;">
             <?php if ($success): ?>
-                <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-r-lg">
-                    <?= htmlspecialchars($success) ?>
+                <div class="alert alert-success">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <?= htmlspecialchars($success) ?>
+                    </div>
                 </div>
             <?php endif; ?>
 
             <?php if ($error): ?>
-                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg">
-                    <?= htmlspecialchars($error) ?>
+                <div class="alert alert-error">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <?= htmlspecialchars($error) ?>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" id="profileForm" class="px-8 pb-10 space-y-8">
-
+        <form method="POST" enctype="multipart/form-data" id="profileForm">
             <!-- Profile Photo Section -->
-            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-8 pt-4">
-                <div class="flex-shrink-0">
+            <div class="photo-section">
+                <div class="profile-preview-wrapper">
                     <?php 
                         $img_path = !empty($user['profile']) ? '../uploads/' . $user['profile'] : '../assets/default-avatar.png';
                     ?>
                     <img src="<?= $img_path ?>" id="img-preview" class="profile-preview" alt="Profile Preview">
                 </div>
 
-                <div class="flex-1 space-y-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Profile Photo</h3>
-                    <p class="text-sm text-gray-500">PNG, JPG or JPEG. Max 5MB recommended.</p>
+                <div class="photo-actions">
+                    <label class="btn-photo btn-upload">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Upload Photo
+                        <input type="file" name="profile_file" id="file-input" class="hidden" accept="image/*">
+                    </label>
 
-                    <div class="flex flex-wrap gap-4">
-                        <label class="cursor-pointer inline-flex items-center px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg border border-gray-300 transition">
-                            Upload Photo
-                            <input type="file" name="profile_file" id="file-input" class="hidden" accept="image/*">
-                        </label>
-
-                        <button type="button" class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition" onclick="startCamera()">
-                            Use Camera
-                        </button>
-                    </div>
+                    <button type="button" class="btn-photo btn-camera" onclick="startCamera()">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Use Camera
+                    </button>
                 </div>
             </div>
 
             <!-- Camera Container -->
-            <div id="camera-container" class="hidden bg-gray-900 rounded-xl p-4 text-center">
-                <video id="video" autoplay playsinline class="mx-auto rounded-lg max-w-[320px] w-full"></video>
-                <canvas id="canvas" class="hidden"></canvas>
-                <div class="mt-5 flex justify-center gap-4">
-                    <button type="button" class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition" onclick="takeSnapshot()">
+            <div id="camera-container" class="camera-container" style="display: none; margin: 0 2rem 2rem 2rem;">
+                <video id="video" autoplay playsinline class="mx-auto rounded-lg" style="max-width: 100%;"></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+                <div class="camera-buttons">
+                    <button type="button" class="btn-photo btn-capture" onclick="takeSnapshot()">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
                         Capture Photo
                     </button>
-                    <button type="button" class="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition" onclick="stopCamera()">
+                    <button type="button" class="btn-photo btn-cancel" onclick="stopCamera()">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                         Cancel
                     </button>
                 </div>
@@ -154,38 +469,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <input type="hidden" name="image_base64" id="image_base64">
 
-            <hr class="border-gray-200 my-8">
-
             <!-- Form Fields -->
-            <div class="grid grid-cols-1 gap-6">
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                    <input type="email" value="<?= htmlspecialchars($user['email']) ?>" disabled 
-                           class="block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 cursor-not-allowed">
+            <div class="form-section">
+                <div class="form-group">
+                    <label>📧 Email Address</label>
+                    <div class="input-icon">
+                        <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <input type="email" value="<?= htmlspecialchars($user['email']) ?>" disabled 
+                               class="form-control" style="padding-left: 2.5rem;">
+                    </div>
                 </div>
 
-                <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" id="name" value="<?= htmlspecialchars($user['name']) ?>" required 
-                           class="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <div class="form-group">
+                    <label>👤 Full Name <span style="color: #ef4444;">*</span></label>
+                    <div class="input-icon">
+                        <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <input type="text" name="name" id="name" value="<?= htmlspecialchars($user['name']) ?>" required 
+                               class="form-control" style="padding-left: 2.5rem;">
+                    </div>
                 </div>
 
-                <div>
-                    <label for="contact" class="block text-sm font-medium text-gray-700 mb-1">Contact Number <span class="text-red-500">*</span></label>
-                    <input type="text" name="contact" id="contact" value="<?= htmlspecialchars($user['contact'] ?? '') ?>" required 
-                           class="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <div class="form-group">
+                    <label>📞 Contact Number <span style="color: #ef4444;">*</span></label>
+                    <div class="input-icon">
+                        <svg class="icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                        </svg>
+                        <input type="text" name="contact" id="contact" value="<?= htmlspecialchars($user['contact'] ?? '') ?>" required 
+                               class="form-control" style="padding-left: 2.5rem;">
+                    </div>
                 </div>
 
-            </div>
+                <hr>
 
-            <!-- Submit Button -->
-            <div class="pt-6">
-                <button type="submit" class="w-full btn-primary inline-flex justify-center items-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition">
+                <button type="submit" class="btn-submit">
+                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
                     Save Changes
                 </button>
             </div>
-
         </form>
     </div>
 </div>
@@ -209,12 +536,13 @@ document.getElementById('file-input').onchange = function (evt) {
 };
 
 async function startCamera() {
-    cameraContainer.classList.remove('hidden');
+    cameraContainer.style.display = 'block';
     try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
     } catch (err) {
         alert("Camera access error: " + err.message);
+        cameraContainer.style.display = 'none';
     }
 }
 
@@ -222,7 +550,7 @@ function stopCamera() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
     }
-    cameraContainer.classList.add('hidden');
+    cameraContainer.style.display = 'none';
 }
 
 function takeSnapshot() {

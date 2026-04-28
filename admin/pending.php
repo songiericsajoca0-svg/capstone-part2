@@ -89,7 +89,7 @@ $count_pending = $pending_bookings->num_rows;
                 </td>
                 <td><?= date('M d, Y<br>h:i A', strtotime($row['created_at'])) ?></td>
                 <td style="white-space:nowrap;">
-                    <a href="assign.php?id=<?= $row['id'] ?>" 
+                    <a href="/assign.php?id=<?= $row['id'] ?>" 
                        class="btn btn-primary" 
                        style="padding:8px 14px; font-size:0.95rem; margin-right:6px;">
                         Assign Driver
@@ -98,7 +98,7 @@ $count_pending = $pending_bookings->num_rows;
                     <form method="POST" action="../cancel.php" style="display:inline;">
                         <input type="hidden" name="booking_id" value="<?= $row['id'] ?>">
                         <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
-                        <input type="hidden" name="redirect" value="pending.php">
+                        <input type="hidden" name="redirect" value="/pending.php">
                         <button type="submit" 
                                 class="btn btn-danger" 
                                 style="padding:8px 12px; font-size:0.95rem;"

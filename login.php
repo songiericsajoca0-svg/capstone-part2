@@ -6,11 +6,26 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Check if user is already logged in, redirect to appropriate dashboard
+if (isLoggedIn()) {
+    if ($_SESSION['role'] === 'admin') {
+        header("Location: admin/dashboard.php");
+    } elseif ($_SESSION['role'] === 'driver') {
+        header("Location: driver/driver_dashboard.php");
+    } else {
+        header("Location: passenger/dashboard.php");
+    }
+    exit;
+}
+
+$error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = trim($_POST['email']);
     $password = $_POST['password'];
+    $remember_me = isset($_POST['remember_me']) ? true : false;
 
-    $stmt = $conn->prepare("SELECT id, name, password, role FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id, name, email, password, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -19,20 +34,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (password_verify($password, $row['password'])) {
             $_SESSION['user_id'] = $row['id'];
             $_SESSION['name']    = $row['name'];
+            $_SESSION['email']   = $row['email'];
             $_SESSION['role']    = $row['role'];
+
+            // Handle "Remember Me" functionality
+            if ($remember_me) {
+                // Generate unique token
+                $token = bin2hex(random_bytes(32));
+                $expires_at = date('Y-m-d H:i:s', strtotime('+30 days'));
+                
+                // Delete old tokens for this user
+                $deleteStmt = $conn->prepare("DELETE FROM user_tokens WHERE user_id = ?");
+                $deleteStmt->bind_param("i", $row['id']);
+                $deleteStmt->execute();
+                
+                // Insert new token
+                $insertStmt = $conn->prepare("INSERT INTO user_tokens (user_id, token, expires_at) VALUES (?, ?, ?)");
+                $insertStmt->bind_param("iss", $row['id'], $token, $expires_at);
+                $insertStmt->execute();
+                
+                // Set cookie (30 days)
+                setcookie('remember_token', $token, time() + (86400 * 30), "/", "", false, true);
+            }
 
             // Redirect base sa role
             if ($row['role'] === 'admin') {
                 header("Location: admin/dashboard.php");
             } elseif ($row['role'] === 'driver') {
-                header("Location: driver/dashboard.php");
+                header("Location: driver/driver_dashboard.php");
             } else {
                 header("Location: passenger/dashboard.php");
             }
             exit;
+        } else {
+            $error = "Invalid email or password.";
         }
+    } else {
+        $error = "Invalid email or password.";
     }
-    $error = "Invalid email or password.";
 }
 ?>
 <!DOCTYPE html>
@@ -40,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | Secure Portal</title>
+  <title>Login | GoTrike Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   
@@ -187,6 +226,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       display: flex;
     }
 
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+      justify-content: space-between;
+    }
+    
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    
+    .checkbox-wrapper input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+    
+    .checkbox-wrapper label {
+      margin: 0;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    
+    .forgot-link {
+      font-size: 0.8rem; 
+      color: var(--secondary); 
+      text-decoration: none; 
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .forgot-link:hover { color: var(--primary); }
+
     .btn-login {
       width: 100%;
       padding: 16px;
@@ -202,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       align-items: center;
       justify-content: center;
       gap: 10px;
-      margin-top: 1rem;
+      margin-top: 0.5rem;
     }
 
     .btn-login:hover {
@@ -224,24 +302,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .footer-text a:hover { text-decoration: underline; }
-
-    /* Custom Style for Forgot Password link to match UI */
-    .forgot-link {
-      font-size: 0.8rem; 
-      color: var(--secondary); 
-      text-decoration: none; 
-      margin-bottom: 0.6rem; 
-      font-weight: 600;
-      transition: color 0.2s;
+    
+    .remember-info {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      margin-left: 26px;
     }
-    .forgot-link:hover { color: var(--primary); }
-
   </style>
 </head>
 <body>
 
 <div class="login-card">
-    <a href="index.php" class="back-home">
+    <a href="/index.php" class="back-home">
         <i data-lucide="chevron-left" size="18"></i>
         Back to Home
     </a>
@@ -250,10 +323,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <img src="assets/images/logo2.png" alt="Portal Logo" class="logo">
     </div>
     
-    <h2>Welcome Back</h2>
+    <h2>Welcome </h2>
     <p class="subtitle">Please enter your details to sign in.</p>
 
-    <?php if(isset($error)): ?>
+    <?php if(!empty($error)): ?>
         <div class="alert alert-error">
             <i data-lucide="alert-circle" size="18"></i> <?php echo $error; ?>
         </div>
@@ -264,14 +337,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label>Email Address</label>
             <div class="input-wrapper">
                 <i data-lucide="mail" class="main-icon"></i>
-                <input type="email" name="email" placeholder="name@company.com" required>
+                <input type="email" name="email" placeholder="name@company.com" required value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
             </div>
         </div>
         
         <div class="form-group">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <label>Password</label>
-                <a href="forgotpass.php" class="forgot-link">Forgot Password?</a>
+                <a href="/forgotpass.php" class="forgot-link">Forgot Password?</a>
             </div>
             <div class="input-wrapper">
                 <i data-lucide="lock" class="main-icon"></i>
@@ -281,6 +354,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </button>
             </div>
         </div>
+        
+        <div class="checkbox-group">
+            <label class="checkbox-wrapper">
+                <input type="checkbox" name="remember_me" id="remember_me">
+                <label for="remember_me">Remember me for 30 days</label>
+            </label>
+        </div>
+        <div class="remember-info">
+            🔐 Stay logged in even after closing your browser
+        </div>
 
         <button type="submit" class="btn-login">
             <span>Sign In to Account</span>
@@ -289,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <p class="footer-text">
-        New here? <a href="register.php">Create an account</a>
+        New here? <a href="/register.php">Create an account</a>
     </p>
 </div>
 
@@ -300,27 +383,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const passwordInput = document.querySelector('#passwordInput');
     const eyeIcon = document.querySelector('#eyeIcon');
 
-    togglePassword.addEventListener('click', function() {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        
-        if (type === 'text') {
-            eyeIcon.setAttribute('data-lucide', 'eye-off');
-        } else {
-            eyeIcon.setAttribute('data-lucide', 'eye');
-        }
-        lucide.createIcons();
-    });
+    if (togglePassword) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            if (type === 'text') {
+                eyeIcon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                eyeIcon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        });
+    }
 
     const form = document.querySelector('form');
-    form.addEventListener('submit', function(e) {
-        // Simple loading state
-        const btn = document.querySelector('.btn-login');
-        const span = btn.querySelector('span');
-        span.innerHTML = 'Authenticating...';
-        btn.style.opacity = '0.8';
-        btn.style.pointerEvents = 'none';
-    });
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const btn = document.querySelector('.btn-login');
+            const span = btn.querySelector('span');
+            span.innerHTML = 'Authenticating...';
+            btn.style.opacity = '0.8';
+            btn.style.pointerEvents = 'none';
+        });
+    }
 </script>
 
 </body>

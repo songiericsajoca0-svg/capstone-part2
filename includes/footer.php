@@ -56,8 +56,7 @@
         <p class="text-xs italic mb-6">A Capstone Project Excellence</p>
         
         <div class="flex flex-wrap justify-center gap-x-8 gap-y-3 uppercase tracking-widest text-[10px] md:text-[11px]">
-          <a href="#" class="hover:text-blue-400 transition-colors duration-300">Privacy Policy</a>
-          <a href="#" class="hover:text-blue-400 transition-colors duration-300">Terms of Service</a>
+          
         </div>
       </div>
 

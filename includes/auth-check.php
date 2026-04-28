@@ -1,8 +1,8 @@
 <?php
 require_once 'config.php';
 
-// 1. Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
+// 1. Check if user is logged in using improved function with Remember Me support
+if (!isLoggedIn()) {
     header("Location: ../login.php");
     exit;
 }
@@ -21,7 +21,7 @@ if ($role === 'passenger') {
 } elseif ($role === 'driver') {
     // DRIVER: Cannot access admin folder
     if ($is_admin_folder) {
-        header("Location: ../driver/dashboard.php");
+        header("Location: ../driver/driver_dashboard.php");
         exit;
     }
 }

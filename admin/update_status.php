@@ -4,7 +4,7 @@ require_once '../includes/auth-check.php';
 require_once '../includes/functions.php';
 
 if ($_SESSION['role'] !== 'admin' || !isset($_GET['id']) || !isset($_GET['status'])) {
-    header("Location: dashboard.php");
+    header("Location: /dashboard.php");
     exit;
 }
 
@@ -27,12 +27,12 @@ if (isset($allowed_transitions[$current]) && $allowed_transitions[$current] === 
     
     if ($up->execute()) {
         log_activity($_SESSION['user_id'], 'STATUS_UPDATE', "Booking #$bid set to $new_status");
-        header("Location: dashboard.php?msg=Status updated to $new_status");
+        header("Location: /dashboard.php?msg=Status updated to $new_status");
     } else {
-        header("Location: dashboard.php?error=Update failed");
+        header("Location: /dashboard.php?error=Update failed");
     }
 } else {
-    header("Location: dashboard.php?error=Invalid status transition");
+    header("Location: /dashboard.php?error=Invalid status transition");
 }
 exit;
 ?>

@@ -10,6 +10,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['email'])) {
         echo "<script>alert('Invalid email address.');</script>";
     }
 }
-header("Location: index.php"); // balik sa home
+header("Location: /index.php"); // balik sa home
 exit;
 ?>

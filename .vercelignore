@@ -1,0 +1,6 @@
+/vendor
+/logs
+/uploads
+*.sql
+README.md
+.gitignore

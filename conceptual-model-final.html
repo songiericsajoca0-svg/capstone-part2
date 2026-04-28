@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GoTrike Conceptual Model</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: white;
+            padding: 40px;
+            line-height: 1.6;
+            color: #1a1a2e;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 28px;
+            text-align: center;
+            color: #1e40af;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 15px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #4b5563;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            font-size: 20px;
+            color: #1e40af;
+            margin: 25px 0 15px;
+            padding-left: 10px;
+            border-left: 4px solid #1e40af;
+        }
+        
+        h3 {
+            font-size: 16px;
+            color: #334155;
+            margin: 15px 0 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        
+        th {
+            background: #1e40af;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .diagram {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 11px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border: 1px solid #cbd5e1;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        @media print {
+            body {
+                padding: 20px;
+            }
+            .diagram {
+                break-inside: avoid;
+            }
+            table {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    
+    <!-- TITLE -->
+    <h1>🚲 DEVELOPMENT OF A TODA TRANSPORT WEB APP<br>FOR BOOKING AND FARE AUTOMATION</h1>
+    <div class="subtitle">To Provide Security and Efficiency | GoTrike System Conceptual Model</div>
+    
+    <!-- SYSTEM OVERVIEW -->
+    <h2>📌 SYSTEM OVERVIEW</h2>
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                           GoTrike - TODA TRANSPORT SYSTEM                            │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
+│   │   PASSENGER  │    │    DRIVER    │    │    ADMIN     │    │    SYSTEM    │      │
+│   │   (Mobile)   │    │   (Mobile)   │    │  (Desktop)   │    │   MODULES    │      │
+│   └──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘      │
+│                                                                                      │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐   │
+│   │                         SHARED SERVICES LAYER                               │   │
+│   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐  │   │
+│   │  │ MySQL   │ │ PHP 8.x │ │ Leaflet │ │ Geoapify│ │ PHPMail │ │ Dompdf  │  │   │
+│   │  │Database │ │ Backend │ │   Maps  │ │   API   │ │   er    │ │   PDF   │  │   │
+│   │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘  │   │
+│   └─────────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+    </div>
+    
+    <!-- SYSTEM ACTORS -->
+    <h2>👥 SYSTEM ACTORS</h2>
+    <table>
+        <thead>
+            <tr><th>Actor</th><th>Role</th><th>Access Device</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Passenger</strong></td><td>Books rides, tracks trips, makes payments</td><td>Mobile Phone / Web Browser</td></tr>
+            <tr><td><strong>Driver</strong></td><td>Accepts bookings, navigates routes, completes trips</td><td>Mobile Phone (GPS-enabled)</td></tr>
+            <tr><td><strong>Admin / TODA Operator</strong></td><td>Manages TODA, drivers, routes, bookings, reports</td><td>Desktop / Laptop</td></tr>
+        </tbody>
+    </table>
+    
+    <!-- FUNCTIONAL MODULES -->
+    <h2>📦 FUNCTIONAL MODULES</h2>
+    
+    <h3>🟢 A. PASSENGER MODULE</h3>
+    <table>
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr><td>Account Registration</td><td>Email + SMS OTP verification via PHPMailer + TextBee.dev</td></tr>
+            <tr><td>Login / Logout</td><td>Session-based authentication with "Remember Me"</td></tr>
+            <tr><td>Create Booking</td><td>Pickup/dropoff selection, passenger count, fare calculation</td></tr>
+            <tr><td>Fare Automation</td><td>Distance-based (₱10/km) + Passenger-based (₱15/pax or ₱30 base)</td></tr>
+            <tr><td>Highway Restriction</td><td>API checks to prevent routes via EDSA, C5, NLEX, SLEX</td></tr>
+            <tr><td>Payment Integration</td><td>Cash (on pickup) + GCash (reference verification)</td></tr>
+            <tr><td>QR Code Generation</td><td>Booking ticket with QR for driver verification</td></tr>
+            <tr><td>Live Trip Tracking</td><td>Real-time driver location on Leaflet map</td></tr>
+            <tr><td>Booking History</td><td>View completed/cancelled trips with details</td></tr>
+            <tr><td>Profile Management</td><td>Edit personal info, upload/change profile photo</td></tr>
+            <tr><td>Cancel Booking</td><td>Cancel pending/assigned bookings with reason</td></tr>
+        </tbody>
+    </table>
+    
+    <h3>🔵 B. DRIVER MODULE</h3>
+    <table>
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr><td>Account Management</td><td>Admin creates driver accounts, driver can edit profile</td></tr>
+            <tr><td>Status Toggle</td><td>Online / Busy / Offline (affects booking visibility)</td></tr>
+            <tr><td>View Pending Bookings</td><td>See bookings from assigned TODA only</td></tr>
+            <tr><td>Accept Booking</td><td>Claim a pending booking (status: ACCEPTED)</td></tr>
+            <tr><td>QR Scanner</td><td>Verify passenger booking before trip start</td></tr>
+            <tr><td>Live GPS Tracking</td><td>Sends location every 2-5 sec to database</td></tr>
+            <tr><td>Navigation Routing</td><td>Tricycle-optimized routes via OSRM + Geoapify</td></tr>
+            <tr><td>Mark Pickup</td><td>Change status: PASSENGER PICKED UP</td></tr>
+            <tr><td>Complete Trip</td><td>Mark trip COMPLETED, update stats & earnings</td></tr>
+            <tr><td>Points & Rewards</td><td>1 point per completed trip, redeemable for items</td></tr>
+            <tr><td>Driver History</td><td>View completed/cancelled trips with earnings</td></tr>
+            <tr><td>Call Passenger</td><td>Direct contact via phone number</td></tr>
+        </tbody>
+    </table>
+    
+    <h3>🟡 C. ADMIN / TODA MODULE</h3>
+    <table>
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr><td>Dashboard Overview</td><td>Real-time driver locations on live map</td></tr>
+            <tr><td>TODA Management</td><td>Create TODA, assign drivers, manage pickup routes</td></tr>
+            <tr><td>Driver Management</td><td>Create/Edit/Delete driver accounts</td></tr>
+            <tr><td>Passenger Management</td><td>View all registered passengers</td></tr>
+            <tr><td>Booking Management</td><td>View PENDING, ASSIGNED, ACTIVE trips</td></tr>
+            <tr><td>Assign Driver</td><td>Assign available driver to pending booking</td></tr>
+            <tr><td>Monitor Active Trips</td><td>Track ASSIGNED → PICKED UP → IN TRANSIT</td></tr>
+            <tr><td>Route Management</td><td>Add pickup terminals with GPS coordinates</td></tr>
+            <tr><td>Fare Configuration</td><td>Set base fare, per-km rate, passenger rates</td></tr>
+            <tr><td>Reports Generation</td><td>PDF export of bookings, revenue, driver performance</td></tr>
+            <tr><td>Booking History</td><td>View all COMPLETED and CANCELLED bookings</td></tr>
+            <tr><td>Cancel Booking</td><td>Admin can cancel any booking with reason</td></tr>
+        </tbody>
+    </table>
+    
+    <!-- SMS OTP with NGROK + TEXTBEE.DEV -->
+    <h2>📱 SMS OTP VERIFICATION (with Ngrok + TextBee.dev)</h2>
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    SMS OTP VERIFICATION FLOW (Testing Environment)                   │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│   ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌────────────┐ │
+│   │   PASSENGER  │─────►│   LOCALHOST  │─────►│    NGROK     │─────►│ TEXTBEE.DEV│ │
+│   │   Register   │      │   XAMPP      │      │   Tunnel     │      │   Webhook  │ │
+│   │   (Mobile)   │      │   PHP 8.x    │      │  (Public URL)│      │   (API)    │ │
+│   └──────────────┘      └──────────────┘      └──────────────┘      └────────────┘ │
+│                                                                                      │
+│   PROCESS:                                                                          │
+│   1. Passenger registers → requests SMS OTP                                         │
+│   2. Local PHP script calls TextBee.dev API                                         │
+│   3. Ngrok exposes localhost to internet (public URL)                               │
+│   4. TextBee.dev sends actual SMS to passenger's mobile number                      │
+│   5. Passenger receives OTP → enters on website → verification complete            │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+🔧 Ngrok Command:  ngrok http 80 (or ngrok http 443 for HTTPS)
+📱 TextBee.dev API Endpoint: https://textbee.dev/api/send/
+    </div>
+    
+    <!-- TESTING PHASE (UPDATED) -->
+    <h2>🧪 TESTING PHASE (with Ngrok + TextBee.dev)</h2>
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                         TESTING PHASE (with Ngrok + TextBee)                         │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│   1. UNIT TESTING                                                                   │
+│      ├── PHPUnit tests for fare calculation                                         │
+│      ├── Database query testing (prepared statements)                               │
+│      └── API endpoint testing (Postman)                                             │
+│                                                                                      │
+│   2. INTEGRATION TESTING                                                            │
+│      ├── Ngrok tunnel + TextBee.dev SMS delivery                                    │
+│      ├── Email OTP via PHPMailer (Gmail SMTP)                                       │
+│      ├── Geoapify geocoding API integration                                         │
+│      └── OSRM routing API integration                                               │
+│                                                                                      │
+│   3. FUNCTIONAL TESTING                                                             │
+│      ├── Passenger: Register with OTP (SMS + Email)                                 │
+│      ├── Passenger: Create booking with fare calculation                            │
+│      ├── Driver: Accept booking → QR scan → pickup → complete                       │
+│      ├── Admin: Assign driver → generate report                                     │
+│      └── Highway restriction checker (block EDSA/C5 routes)                         │
+│                                                                                      │
+│   4. COMPATIBILITY TESTING                                                          │
+│      ├── Chrome, Firefox, Safari, Edge                                              │
+│      ├── Mobile: iOS Safari, Android Chrome                                         │
+│      └── Responsive design (320px - 1920px)                                         │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+    </div>
+    
+    <!-- BOOKING LIFECYCLE -->
+    <h2>🔄 BOOKING & TRIP LIFECYCLE</h2>
+    <div class="diagram">
+PASSENGER BOOKS → PENDING → ASSIGNED (Driver assigned) → ACCEPTED (Driver accepts)
+       │              │              │                    │
+       ▼              ▼              ▼                    ▼
+  CANCELLED      CANCELLED      CANCELLED          PASSENGER PICKED UP
+  (by admin)     (by driver)    (by passenger)           │
+                                                         ▼
+                                                    IN TRANSIT
+                                                         │
+                                                         ▼
+                                                    COMPLETED ✓
+    </div>
+    
+    <!-- FARE FORMULA -->
+    <h2>💰 FARE AUTOMATION FORMULA</h2>
+    <div class="diagram">
+📐 DISTANCE CALCULATION (Haversine Formula):
+distance = 6371 × arccos[ sin(φ₁) × sin(φ₂) + cos(φ₁) × cos(φ₂) × cos(Δλ) ]
+
+💵 FARE BREAKDOWN:
+IF total_pax ≤ 2: base_fare = ₱30
+ELSE: base_fare = total_pax × ₱15
+
+pickup_fee = CEIL(distance_km) × ₱10
+total_fare = base_fare + pickup_fee
+required_tricycles = CEIL(total_pax / 4)
+
+📊 EXAMPLE (3 passengers, 2.3 km):
+base_fare = 3 × 15 = ₱45 | rounded_distance = 3 km | pickup_fee = 3 × 10 = ₱30
+TOTAL = ₱75
+    </div>
+    
+    <!-- HIGHWAY RESTRICTION -->
+    <h2>🛡️ HIGHWAY RESTRICTION LOGIC</h2>
+    <div class="diagram">
+INPUT: pickup_coords, dropoff_coords
+
+STEP 1: Check EDSA geofence (14.54-14.70 lat, 121.00-121.07 lng)
+STEP 2: Call OSRM routing API to get road names
+STEP 3: Check each road segment against restricted list:
+        [EDSA, C5, NLEX, SLEX, Skyway, Commonwealth, Roxas Blvd, etc.]
+STEP 4: If ANY restricted road found → BLOCK booking
+        Else → ALLOW booking
+    </div>
+    
+    <!-- TECHNOLOGY STACK (UPDATED) -->
+    <h2>🛠️ TECHNOLOGY STACK</h2>
+    <div class="diagram">
+FRONTEND                          BACKEND & DATABASE
+┌─────────────────────┐           ┌─────────────────────────────────────────────┐
+│ HTML5               │           │ PHP 8.x (Native)                            │
+│ CSS3 + Tailwind CSS │           │ MySQL (MariaDB)                             │
+│ JavaScript (Vanilla)│           │ PDO / MySQLi                                │
+│ Leaflet.js + OSM    │           │ PHPMailer (Email)                           │
+│ Font Awesome 6      │           │ Dompdf (PDF Generation)                     │
+│ SweetAlert2         │           │ phpqrcode (QR Generation)                   │
+└─────────────────────┘           └─────────────────────────────────────────────┘
+
+TESTING TOOLS
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ 📦 Ngrok              → Exposes local XAMPP to public internet                  │
+│ 📱 TextBee.dev        → Free SMS API for OTP testing to PH numbers              │
+│ 🔐 Environment        → .env file stores API keys securely                     │
+│    Variables          → TEXTBEE_API_KEY, TEXTBEE_DEVICE_ID                      │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+DEVELOPMENT & DEPLOYMENT: XAMPP | Git | Composer
+    </div>
+    
+    <!-- SECURITY FEATURES -->
+    <h2>🔒 SECURITY FEATURES</h2>
+    <table>
+        <thead><tr><th>Feature</th><th>Implementation</th></tr></thead>
+        <tbody>
+            <tr><td>Password Hashing</td><td>password_hash() with BCRYPT</td></tr>
+            <tr><td>SQL Injection Prevention</td><td>Prepared statements (PDO / MySQLi)</td></tr>
+            <tr><td>Session Management</td><td>session_start(), session validation</td></tr>
+            <tr><td>Remember Me</td><td>user_tokens table with 30-day cookies</td></tr>
+            <tr><td>CSRF Protection</td><td>Tokens on critical forms</td></tr>
+            <tr><td>XSS Prevention</td><td>htmlspecialchars() on all outputs</td></tr>
+            <tr><td>OTP Verification</td><td>6-digit codes via Email (PHPMailer) + SMS (TextBee.dev)</td></tr>
+            <tr><td>Role-Based Access</td><td>role column ('admin', 'driver', 'passenger')</td></tr>
+        </tbody>
+    </table>
+    
+    <!-- API INTEGRATIONS -->
+    <h2>🔗 API INTEGRATIONS</h2>
+    <table>
+        <thead><tr><th>API / Service</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td>Leaflet.js + OpenStreetMap</td><td>Interactive maps for drivers & passengers</td></tr>
+            <tr><td>Geoapify API</td><td>Geocoding (address → coordinates), reverse geocoding</td></tr>
+            <tr><td>OSRM</td><td>Driving/foot/bike route calculation (tricycle-optimized)</td></tr>
+            <tr><td>PHPMailer (SMTP)</td><td>Email OTP for registration & password reset</td></tr>
+            <tr><td>TextBee.dev</td><td>SMS OTP delivery to Philippine mobile numbers (testing)</td></tr>
+            <tr><td>Ngrok</td><td>Expose localhost for SMS webhook callbacks</td></tr>
+            <tr><td>Google Maps Embed API</td><td>Static map display on contact page</td></tr>
+            <tr><td>MediaDevices API</td><td>Camera access for QR scanning & profile photo</td></tr>
+            <tr><td>Geolocation API (HTML5)</td><td>Real-time GPS tracking</td></tr>
+        </tbody>
+    </table>
+    
+    <!-- CONCLUSION -->
+    <h2>✅ SYSTEM COMPLETION STATUS</h2>
+    <table>
+        <thead><tr><th>Objective</th><th>Status</th></tr></thead>
+        <tbody>
+            <tr><td>Booking Automation</td><td><span class="status-badge status-success">✓ COMPLETED</span></td></tr>
+            <tr><td>Fare Automation</td><td><span class="status-badge status-success">✓ COMPLETED</span></td></tr>
+            <tr><td>Security Features</td><td><span class="status-badge status-success">✓ COMPLETED</span></td></tr>
+            <tr><td>Real-Time Tracking</td><td><span class="status-badge status-success">✓ COMPLETED</span></td></tr>
+            <tr><td>Driver Points System</td><td><span class="status-badge status-success">✓ COMPLETED</span></td></tr>
+            <tr><td>TODA Management</td><td><span class="status-badge status-success">✓ COMPLETED</span></td></tr>
+            <tr><td>Highway Restriction</td><td><span class="status-badge status-success">✓ COMPLETED</span></td></tr>
+            <tr><td>PDF Reports</td><td><span class="status-badge status-success">✓ COMPLETED</span></td></tr>
+            <tr><td>SMS OTP (TextBee.dev + Ngrok)</td><td><span class="status-badge status-success">✓ INTEGRATED</span></td></tr>
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        <p>GoTrike - Your Trusted TODA Transport Service | Caloocan South, Metro Manila</p>
+        <p>© 2024 GoTrike System | Conceptual Model for Capstone Project</p>
+        <p style="margin-top: 8px; font-size: 10px;">Testing Tools: Ngrok + TextBee.dev for SMS OTP Verification</p>
+    </div>
+    
+</div>
+</body>
+</html>
