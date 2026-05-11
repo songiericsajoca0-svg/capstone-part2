@@ -125,6 +125,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         :root { --primary: #2563eb; }
         body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; }
         .terminal-card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .btn-loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -138,13 +154,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="text-slate-500 text-sm">Manual verification and trip ending</p>
     </div>
 
-    <form method="POST" class="space-y-4 mb-10">
+    <form id="pickupForm" class="space-y-4 mb-10">
         <input type="hidden" name="manual_form" value="1">
         <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase mb-2 ml-1">Enter Booking Code</label>
-            <input type="text" name="code" class="w-full p-4 rounded-xl border-2 border-dashed border-slate-200 text-center font-bold text-lg focus:border-blue-500 focus:border-solid outline-none transition-all uppercase" placeholder="BK-XXXXX" required>
+            <input type="text" id="bookingCode" name="code" class="w-full p-4 rounded-xl border-2 border-dashed border-slate-200 text-center font-bold text-lg focus:border-blue-500 focus:border-solid outline-none transition-all uppercase" placeholder="BK-XXXXX" required>
         </div>
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
+        <button type="submit" id="pickupBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
             <i class="fas fa-user-check"></i> VERIFY & PICKUP
         </button>
     </form>
@@ -154,14 +170,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-4 text-slate-400 font-semibold">OR END CURRENT TRIP</span></div>
     </div>
 
-    <form method="POST" class="space-y-4">
+    <form id="completeForm" class="space-y-4">
         <input type="hidden" name="manual_form" value="1">
         <input type="hidden" name="action" value="complete">
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
             <label class="block text-xs font-semibold text-slate-500 uppercase mb-2 ml-1">Active Booking ID</label>
-            <input type="number" name="booking_id" class="w-full p-3 rounded-lg border border-slate-200 text-center font-bold" placeholder="0000" required>
+            <input type="number" id="bookingId" name="booking_id" class="w-full p-3 rounded-lg border border-slate-200 text-center font-bold" placeholder="0000" required>
         </div>
-        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2">
+        <button type="submit" id="completeBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2">
             <i class="fas fa-flag-checkered"></i> COMPLETE TRIP
         </button>
     </form>
@@ -173,20 +189,182 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
-<?php if ($message): ?>
 <script>
-    Swal.fire({
-        title: '<?= $status_type === "success" ? "Success!" : "Error" ?>',
-        text: '<?= $message ?>',
-        icon: '<?= $status_type ?>',
-        confirmButtonColor: '#2563eb'
-    }).then(() => {
-        <?php if ($status_type === "success"): ?>
-        window.location.href = 'dashboard.php';
-        <?php endif; ?>
-    });
+// Helper function to show loading state on button
+function setLoading(button, isLoading) {
+    if (isLoading) {
+        button.classList.add('btn-loading');
+        button.disabled = true;
+        const originalHTML = button.innerHTML;
+        button.dataset.originalHTML = originalHTML;
+        button.innerHTML = '<span class="loading-spinner"></span> PROCESSING...';
+    } else {
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+        if (button.dataset.originalHTML) {
+            button.innerHTML = button.dataset.originalHTML;
+            delete button.dataset.originalHTML;
+        }
+    }
+}
+
+// Helper function to reset forms
+function resetForms() {
+    document.getElementById('bookingCode').value = '';
+    document.getElementById('bookingId').value = '';
+    
+    // Remove any error styling
+    document.getElementById('bookingCode').classList.remove('border-red-500');
+    document.getElementById('bookingId').classList.remove('border-red-500');
+}
+
+// Handle Pickup Form Submission
+document.getElementById('pickupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const code = document.getElementById('bookingCode').value.trim();
+    if (!code) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Empty Field',
+            text: 'Please enter a booking code.',
+            confirmButtonColor: '#2563eb'
+        });
+        return;
+    }
+    
+    const pickupBtn = document.getElementById('pickupBtn');
+    setLoading(pickupBtn, true);
+    
+    try {
+        const formData = new FormData();
+        formData.append('code', code);
+        formData.append('manual_form', '1');
+        
+        const response = await fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Verified!',
+                text: result.message,
+                confirmButtonColor: '#2563eb',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                resetForms();
+                // Optional: Focus back on the input for next scan
+                document.getElementById('bookingCode').focus();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Verification Failed',
+                text: result.message,
+                confirmButtonColor: '#2563eb'
+            });
+            document.getElementById('bookingCode').classList.add('border-red-500');
+            setTimeout(() => {
+                document.getElementById('bookingCode').classList.remove('border-red-500');
+            }, 3000);
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: 'Failed to connect to server. Please try again.',
+            confirmButtonColor: '#2563eb'
+        });
+    } finally {
+        setLoading(pickupBtn, false);
+    }
+});
+
+// Handle Complete Trip Form Submission
+document.getElementById('completeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const bookingId = document.getElementById('bookingId').value.trim();
+    if (!bookingId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Empty Field',
+            text: 'Please enter a booking ID.',
+            confirmButtonColor: '#2563eb'
+        });
+        return;
+    }
+    
+    const completeBtn = document.getElementById('completeBtn');
+    setLoading(completeBtn, true);
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'complete');
+        formData.append('booking_id', bookingId);
+        formData.append('manual_form', '1');
+        
+        const response = await fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Trip Completed!',
+                text: result.message,
+                confirmButtonColor: '#2563eb',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                // Reset the form after completion
+                resetForms();
+                // Optional: Focus back on booking code input for next transaction
+                document.getElementById('bookingCode').focus();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Completion Failed',
+                text: result.message,
+                confirmButtonColor: '#2563eb'
+            });
+            document.getElementById('bookingId').classList.add('border-red-500');
+            setTimeout(() => {
+                document.getElementById('bookingId').classList.remove('border-red-500');
+            }, 3000);
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: 'Failed to connect to server. Please try again.',
+            confirmButtonColor: '#2563eb'
+        });
+    } finally {
+        setLoading(completeBtn, false);
+    }
+});
+
+// Auto-focus on booking code input on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('bookingCode').focus();
+});
 </script>
-<?php endif; ?>
 
 </body>
 </html>
